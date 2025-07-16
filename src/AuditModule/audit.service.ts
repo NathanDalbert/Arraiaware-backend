@@ -48,4 +48,38 @@ export class AuditService {
       },
     });
   }
+
+  async exportToCsv(): Promise<string> {
+    const logs = await this.findAll();
+    if (logs.length === 0) {
+      return 'Nenhum registro de auditoria para exportar.';
+    }
+
+    const headers = [
+      'ID',
+      'Ação',
+      'ID do Usuário',
+      'Nome do Usuário',
+      'Email do Usuário',
+      'Detalhes',
+      'Endereço IP',
+      'Data de Criação',
+    ].join(',');
+
+    const rows = logs.map(log => {
+      const details = log.details ? JSON.stringify(log.details).replace(/"/g, '""') : '';
+      return [
+        `"${log.id}"`,
+        `"${log.action}"`,
+        `"${log.userId || 'N/A'}"`,
+        `"${log.user?.name || 'Sistema'}"`,
+        `"${log.user?.email || 'N/A'}"`,
+        `"${details}"`,
+        `"${log.ipAddress || 'N/A'}"`,
+        `"${log.createdAt.toISOString()}"`,
+      ].join(',');
+    });
+
+    return [headers, ...rows].join('\n');
+  }
 }
