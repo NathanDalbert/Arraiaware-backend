@@ -10,11 +10,17 @@ export class EmailService {
   constructor(private configService: ConfigService) {
     const smtpHost = this.configService.get<string>('SMTP_HOST');
     const smtpPort = this.configService.get<number>('SMTP_PORT');
+    const smtpUser = this.configService.get<string>('SMTP_USER');
+    const smtpPass = this.configService.get<string>('SMTP_PASS');
     
     this.transporter = nodemailer.createTransport({
       host: smtpHost,
       port: smtpPort,
-      secure: false, 
+      secure: false,
+      auth: { 
+        user: smtpUser,
+        pass: smtpPass,
+      },
       tls: {
         rejectUnauthorized: false 
       }
