@@ -28,7 +28,7 @@ export class UsersController {
 
   @Get()
   @UseGuards(RolesGuard)
-  @Roles(UserType.ADMIN, UserType.RH, UserType.GESTOR)
+  @Roles(UserType.ADMIN, UserType.RH, UserType.GESTOR,UserType.COLABORADOR)
   @ApiOperation({ summary: 'Listar todos os usuários' })
   @ApiResponse({ status: 200, description: 'Lista de usuários retornada com sucesso.'})
   findAll() {

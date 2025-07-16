@@ -12,6 +12,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   UploadedFile,
   UseInterceptors
 } from '@nestjs/common';
@@ -140,6 +141,18 @@ export class CriteriaController {
     @Body() associateCriteriaDto: AssociateCriteriaToRoleDto,
   ) {
     return this.criteriaService.associateCriteriaToRole(roleId, associateCriteriaDto);
+  }
+
+  @Put('roles/:roleId/criteria')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Sincroniza (define) todos os critérios para um cargo/trilha' })
+  @ApiResponse({ status: 200, description: 'Critérios do cargo sincronizados com sucesso.' })
+  @ApiResponse({ status: 404, description: 'Cargo ou um dos critérios não encontrado.' })
+  async syncRoleCriteria(
+    @Param('roleId', ParseUUIDPipe) roleId: string,
+    @Body() associateCriteriaDto: AssociateCriteriaToRoleDto,
+  ) {
+    return this.criteriaService.syncRoleCriteria(roleId, associateCriteriaDto);
   }
 
   @Delete(':id/disassociate-role')

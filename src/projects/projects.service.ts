@@ -14,16 +14,28 @@ export class ProjectsService {
       throw new NotFoundException(`Ciclo com ID ${cycleId} não encontrado.`);
     }
 
-    return this.prisma.project.create({
-      data: {
-        name,
-        cycle: { connect: { id: cycleId } },
-        manager: { connect: { id: managerId } },
-        collaborators: {
-          connect: collaboratorIds.map((id) => ({ id })),
+    const [project] = await this.prisma.$transaction([
+      this.prisma.project.create({
+        data: {
+          name,
+          cycle: { connect: { id: cycleId } },
+          manager: { connect: { id: managerId } },
+          collaborators: {
+            connect: collaboratorIds.map((id) => ({ id })),
+          },
         },
-      },
-    });
+      }),
+      this.prisma.user.updateMany({
+        where: {
+          id: { in: collaboratorIds },
+        },
+        data: {
+          leaderId: managerId,
+        },
+      }),
+    ]);
+
+    return project;
   }
 
   findAll() {

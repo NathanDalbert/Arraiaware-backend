@@ -342,6 +342,58 @@ async associateToRole(criterionId: string, associateCriterionDto: AssociateCrite
     });
   }
 
+    async syncRoleCriteria(roleId: string, dto: AssociateCriteriaToRoleDto) {
+    const { criterionIds: desiredIds } = dto;
+
+    const role = await this.prisma.role.findUnique({ where: { id: roleId } });
+    if (!role) {
+      throw new RoleForAssociationNotFoundException(roleId);
+    }
+
+    if (desiredIds.length > 0) {
+      const foundCriteria = await this.prisma.evaluationCriterion.findMany({
+        where: { id: { in: desiredIds } },
+        select: { id: true },
+      });
+      if (foundCriteria.length !== desiredIds.length) {
+        const foundIdsSet = new Set(foundCriteria.map(c => c.id));
+        const notFoundIds = desiredIds.filter(id => !foundIdsSet.has(id));
+        throw new CriterionNotFoundException(`Critérios não encontrados: ${notFoundIds.join(', ')}`);
+      }
+    }
+
+    const currentAssociations = await this.prisma.roleCriteria.findMany({
+      where: { roleId },
+      select: { criterionId: true },
+    });
+    const currentIds = new Set(currentAssociations.map(a => a.criterionId));
+    const desiredIdsSet = new Set(desiredIds);
+
+    const idsToAdd = desiredIds.filter(id => !currentIds.has(id));
+    const idsToRemove = Array.from(currentIds).filter(id => !desiredIdsSet.has(id));
+
+    await this.prisma.$transaction([
+      this.prisma.roleCriteria.deleteMany({
+        where: {
+          roleId: roleId,
+          criterionId: { in: idsToRemove },
+        },
+      }),
+      this.prisma.roleCriteria.createMany({
+        data: idsToAdd.map(criterionId => ({
+          roleId,
+          criterionId,
+        })),
+      }),
+    ]);
+
+    return {
+      message: `Critérios para o cargo '${role.name}' foram sincronizados com sucesso.`,
+      added: idsToAdd.length,
+      removed: idsToRemove.length,
+    };
+  }
+
   async disassociateFromRole(criterionId: string, disassociateDto: DisassociateCriterionDto) {
     const { roleId } = disassociateDto;
   

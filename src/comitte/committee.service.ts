@@ -59,7 +59,7 @@ this.prisma.user.count({
   },
 }),
       this.prisma.leaderEvaluation.findMany({ where: { cycleId } }),
-      this.prisma.selfEvaluation.findMany({ where: { cycleId, submissionStatus: 'Concluído' } }),
+      this.prisma.selfEvaluation.findMany({ where: { cycleId, submissionStatus: 'Concluída' } }),
     ]);
 
     let totalScore = 0;
@@ -68,7 +68,7 @@ this.prisma.user.count({
             totalScore += ev.deliveryScore + ev.proactivityScore + ev.collaborationScore + ev.skillScore;
         });
     }
-    
+   
     const overallAverage = leaderEvaluations.length > 0 ? parseFloat((totalScore / (leaderEvaluations.length * 4)).toFixed(2)) : 0;
 
     const readyEvaluations = new Set(selfEvaluations.map(ev => ev.userId)).size;
@@ -271,7 +271,7 @@ this.prisma.user.count({
       buffer: buffer,
     };
   }
-  
+
   async getCommitteePanel(query: GetCommitteePanelQueryDto) {
     const { page = 1, limit = 10, cycleId: queryCycleId, search, track } = query;
 
@@ -310,7 +310,7 @@ this.prisma.user.count({
         if (!user.leaderId && user.userType !== UserType.GESTOR && user.userType !==UserType.RH){
             return null;
         }
-        
+       
         const [selfEvals, peerEvals, leaderEval, directReportEval, finalizedEval, equalizationLog, aiSummary] = await Promise.all([
           this.prisma.selfEvaluation.findMany({ where: { userId: user.id, cycleId }, select: { score: true } }),
           this.prisma.peerEvaluation.findMany({ where: { evaluatedUserId: user.id, cycleId }, select: { generalScore: true } }),
@@ -323,7 +323,7 @@ this.prisma.user.count({
 
         const selfEvaluationScore = selfEvals.length > 0 ? parseFloat((selfEvals.reduce((acc, ev) => acc + ev.score, 0) / selfEvals.length).toFixed(1)) : null;
         const peerEvaluationScore = peerEvals.length > 0 ? parseFloat((peerEvals.reduce((acc, ev) => acc + ev.generalScore, 0) / peerEvals.length).toFixed(1)) : null;
-        
+
         let managerEvaluationScore: number | null = null;
         if (leaderEval) {
             const sum = leaderEval.deliveryScore + leaderEval.proactivityScore + leaderEval.collaborationScore + leaderEval.skillScore;
@@ -335,7 +335,7 @@ this.prisma.user.count({
             const sum = directReportEval.visionScore + directReportEval.inspirationScore + directReportEval.developmentScore + directReportEval.feedbackScore;
             directReportScore = parseFloat((sum / 4).toFixed(1));
         }
-        
+       
         const isCollaborator = user.userType === UserType.COLABORADOR;
         const areCollaboratorEvalsMissing = isCollaborator && (managerEvaluationScore === null || directReportScore === null);
 
@@ -363,7 +363,7 @@ this.prisma.user.count({
         };
       }),
     );
-    
+   
     const completedEvaluations = evaluationsData.filter(evaluation => evaluation !== null);
     const totalItems = completedEvaluations.length;
     const totalPages = Math.ceil(totalItems / limit);
@@ -392,8 +392,7 @@ this.prisma.user.count({
       if (!mentor) {
         throw new NotFoundException(`Mentor com ID ${mentorId} não encontrado.`);
       }
-
-    
+  
     if (mentor.userType !== UserType.COMITE && mentor.userType !== UserType.ADMIN) {
         throw new ForbiddenException(`O usuário ${mentor.name} não tem a permissão 'COMITE' para ser um mentor.`);
       }
@@ -403,8 +402,7 @@ this.prisma.user.count({
       where: { id: userId },
       data: { mentorId: mentorId },
     });
-    
-    
+      
     const { passwordHash, ...result } = updatedUser;
     return { ...result, passwordHash: undefined };
   }
@@ -449,7 +447,7 @@ this.prisma.user.count({
 
     return { summary };
   }
-  
+ 
   async updateCommitteeEvaluation(
     evaluationId: string,
     dto: UpdateCommitteeEvaluationDto,
@@ -463,7 +461,7 @@ this.prisma.user.count({
     const transactionPayload: Prisma.PrismaPromise<any>[] = [];
 
     if (dto.finalScore !== undefined) {
-      const criterionId = 'geral'; 
+      const criterionId = 'geral';
       await this.prisma.evaluationCriterion.upsert({
         where: { id: criterionId },
         update: {},

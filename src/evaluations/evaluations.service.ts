@@ -56,6 +56,7 @@ export class EvaluationsService {
       score: ev.score,
       justification: this.encryptionService.encrypt(ev.justification),
       scoreDescription: this.encryptionService.encrypt(ev.scoreDescription),
+      submissionStatus: 'Concluída',
     }));
 
     return this.prisma.$transaction(
