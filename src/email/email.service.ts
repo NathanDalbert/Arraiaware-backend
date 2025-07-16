@@ -2,6 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 
+const isValidEmail = (email: string): boolean => {
+  if (!email) return false;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
 @Injectable()
 export class EmailService {
   private transporter: nodemailer.Transporter;
@@ -31,6 +37,14 @@ export class EmailService {
   }
 
   async sendWelcomeEmail(to: string, initialPassword: string) {
+    if (!isValidEmail(to)) {
+      this.logger.error(`Tentativa de enviar e-mail de boas-vindas para um endereço inválido: "${to}". O envio foi cancelado.`);
+      return;
+    }
+    if (to.endsWith('@example.com')||to.endsWith('@empresa.com')) {
+      this.logger.warn(`E-mail de boas-vindas para ${to} bloqueado por ser um domínio de exemplo.`);
+      return;
+    }
     const mailOptions = {
         from: `"Plataforma RPE" <${this.configService.get<string>('SMTP_FROM_EMAIL', 'noreply@rpe.com')}>`,
         to: to,
