@@ -10,6 +10,7 @@ import { GetUsersQueryDto } from './dto/get-users-query.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { Public } from 'src/auth/public.decorator';
 
 @ApiTags('Users')
 @Controller('api/users')
@@ -98,8 +99,8 @@ export class UsersController {
     return this.usersService.changePassword(userId, changePasswordDto);
   }
 
+  @Public() 
   @Post('reset-password')
-  @UseGuards(RolesGuard)
   @Audit('RESET_USER_PASSWORD')
   @ApiOperation({ summary: 'Resetar a senha de um usuário por e-mail' })
   @ApiResponse({ status: 200, description: 'Senha resetada e enviada por e-mail com sucesso.'})
