@@ -11,11 +11,21 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const port = process.env.PORT || 3000;
 
-  app.enableCors({
-    origin: 'https://arraiaware-frontend-iota.vercel.app/',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
-  });
+    const allowedOrigins = [
+      'https://arraiaware-frontend-iota.vercel.app',
+      'http://localhost:5173',
+    ];
+
+    app.enableCors({
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
+
+    });
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
 
