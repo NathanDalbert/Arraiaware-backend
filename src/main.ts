@@ -12,7 +12,7 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
 
   app.enableCors({
-    origin: 'https://arraiaware-frontend-iota.vercel.app',
+    origin: 'https://arraiaware-frontend-iota.vercel.app/',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
