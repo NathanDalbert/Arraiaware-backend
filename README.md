@@ -177,9 +177,9 @@ Inicie o servidor em modo desenvolvimento (hot-reload):
 pnpm start:dev
 ```
 
-A aplicação estará disponível em: [http://localhost:3000](http://localhost:3000)
+A aplicação estará disponível em: [https://arraiaware-backend.onrender.com](https://arraiaware-backend.onrender.com)
 
-Documentação Swagger: [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+Documentação Swagger: [https://arraiaware-backend.onrender.com/api-docs](https://arraiaware-backend.onrender.com/api-docs)
 
 Simulador de E-mails (**MailHog**): veja `docker-compose.yml` para acesso ao painel.
 
