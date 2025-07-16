@@ -6,7 +6,6 @@ import { EncryptionService } from '../common/encryption/encryption.service';
 export class PrismaService extends PrismaClient implements OnModuleInit {
   constructor(
     private readonly encryptionService: EncryptionService,
-    
   ) {
     super();
   }
@@ -15,7 +14,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     await this.$connect();
     
     this.$use(async (params, next) => {
-      
       const sensitiveStringFields = {
         SelfEvaluation: ['justification', 'scoreDescription'],
         PeerEvaluation: ['pointsToImprove', 'pointsToExplore', 'motivatedToWorkAgain'],
@@ -23,77 +21,93 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         LeaderEvaluation: ['justification'],
         EqualizationLog: ['observation', 'previousValue', 'newValue'],
         AISummary: ['content'],
-        
       };
 
       const sensitiveJsonFields = {
         AuditLog: ['details'],
-       
       };
 
       const writeActions = ['create', 'createMany', 'update', 'updateMany', 'upsert'];
-
+      
     
       if (writeActions.includes(params.action) && params.args.data) {
-          const modelName = params.model;
-          const data = Array.isArray(params.args.data) ? params.args.data : [params.args.data];
+        const modelName = params.model;
+        const data = Array.isArray(params.args.data) ? params.args.data : [params.args.data];
 
-          for(const item of data) {
-          
-              if (sensitiveStringFields[modelName]) {
-                  for (const field of sensitiveStringFields[modelName]) {
-                      if (item[field] && typeof item[field] === 'string') {
-                          item[field] = this.encryptionService.encrypt(item[field]);
-                      }
-                  }
+        for (const item of data) {
+        
+          if (sensitiveStringFields[modelName]) {
+            for (const field of sensitiveStringFields[modelName]) {
+              if (item[field] && typeof item[field] === 'string') {
+                try {
+                  item[field] = this.encryptionService.encrypt(item[field]);
+                } catch (error) {
+                  console.error(`Erro ao criptografar campo ${field}:`, error);
+                }
               }
-
-             
-              if (sensitiveJsonFields[modelName]) {
-                  for (const field of sensitiveJsonFields[modelName]) {
-                      if (item[field] && typeof item[field] === 'object') {
-                          const jsonString = JSON.stringify(item[field]);
-                          item[field] = this.encryptionService.encrypt(jsonString);
-                      }
-                  }
-              }
+            }
           }
+          
+             if (sensitiveJsonFields[modelName]) {
+            for (const field of sensitiveJsonFields[modelName]) {
+              if (item[field] && typeof item[field] === 'object') {
+                try {
+                  const jsonString = JSON.stringify(item[field]);
+                  item[field] = this.encryptionService.encrypt(jsonString);
+                } catch (error) {
+                  console.error(`Erro ao criptografar campo JSON ${field}:`, error);
+                }
+              }
+            }
+          }
+        }
       }
 
       const result = await next(params);
 
       const findActions = ['findUnique', 'findFirst', 'findMany', 'findUniqueOrThrow', 'findFirstOrThrow'];
-    
+      
+
       if (findActions.includes(params.action) && result) {
         const modelName = params.model;
 
         const processResult = (item) => {
           if (!item) return item;
-
- 
+          
+          
           if (sensitiveStringFields[modelName]) {
             for (const field of sensitiveStringFields[modelName]) {
               if (item[field] && typeof item[field] === 'string') {
-                item[field] = this.encryptionService.decrypt(item[field]);
-              }
-            }
-          }
-
-     
-          if (sensitiveJsonFields[modelName]) {
-            for (const field of sensitiveJsonFields[modelName]) {
-              if (item[field] && typeof item[field] === 'string') {
-                const decryptedString = this.encryptionService.decrypt(item[field]);
                 try {
-                
-                  item[field] = JSON.parse(decryptedString);
-                } catch (e) {
-
-                  item[field] = decryptedString;
+                  item[field] = this.encryptionService.decrypt(item[field]);
+                } catch (error) {
+                  console.error(`Erro ao descriptografar campo ${field}:`, error);
+               
                 }
               }
             }
           }
+          
+   
+          if (sensitiveJsonFields[modelName]) {
+            for (const field of sensitiveJsonFields[modelName]) {
+              if (item[field] && typeof item[field] === 'string') {
+                try {
+                  const decryptedString = this.encryptionService.decrypt(item[field]);
+                  item[field] = JSON.parse(decryptedString);
+                } catch (error) {
+                  console.error(`Erro ao descriptografar campo JSON ${field}:`, error);
+                 
+                  try {
+                    item[field] = this.encryptionService.decrypt(item[field]);
+                  } catch (decryptError) {
+                    console.error(`Erro crítico na descriptografia de ${field}:`, decryptError);
+                  }
+                }
+              }
+            }
+          }
+          
           return item;
         };
 
@@ -106,5 +120,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 
       return result;
     });
+  }
+
+  async onModuleDestroy() {
+    await this.$disconnect();
   }
 }
