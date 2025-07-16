@@ -9,6 +9,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { GetUsersQueryDto } from './dto/get-users-query.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @ApiTags('Users')
 @Controller('api/users')
@@ -97,14 +98,14 @@ export class UsersController {
     return this.usersService.changePassword(userId, changePasswordDto);
   }
 
-  @Patch(':id/reset-password')
+  @Post('reset-password')
   @UseGuards(RolesGuard)
   @Audit('RESET_USER_PASSWORD')
-  @ApiOperation({ summary: 'Resetar a senha de um usuário' })
+  @ApiOperation({ summary: 'Resetar a senha de um usuário por e-mail' })
   @ApiResponse({ status: 200, description: 'Senha resetada e enviada por e-mail com sucesso.'})
   @ApiResponse({ status: 404, description: 'Usuário não encontrado.'})
-  resetPassword(@Param('id', ParseUUIDPipe) id: string) {
-    return this.usersService.resetPassword(id);
+  resetPassword(@Body() resetPasswordDto: ResetPasswordDto) { 
+    return this.usersService.resetPassword(resetPasswordDto.email);
   }
 
   @Get(':id/evaluation-history')

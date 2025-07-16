@@ -186,10 +186,10 @@ export class UsersService {
     return { message: 'Senha alterada com sucesso.' };
   }
 
-  async resetPassword(userId: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+  async resetPassword(email: string) {
+    const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
-      throw new NotFoundException(`Usuário com ID ${userId} não encontrado`);
+      throw new NotFoundException(`Usuário com e-mail ${email} não encontrado`);
     }
 
     const newPassword = randomBytes(8).toString('hex');
@@ -198,7 +198,7 @@ export class UsersService {
     const newPasswordHash = await bcrypt.hash(newPassword, saltOrRounds);
 
     await this.prisma.user.update({
-      where: { id: userId },
+      where: { id: user.id },
       data: { passwordHash: newPasswordHash },
     });
 
